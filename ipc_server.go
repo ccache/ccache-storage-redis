@@ -13,7 +13,10 @@ import (
 	"time"
 )
 
-const ipcBufferSize = 64 << 10
+const (
+	ipcBufferSize    = 64 << 10
+	acceptRetryDelay = 100 * time.Millisecond
+)
 
 type ipcServer struct {
 	config    *config
@@ -70,7 +73,11 @@ func (s *ipcServer) acceptLoop() {
 				return
 			default:
 				s.logger.logf("Accept error: %v", err)
-				continue
+				select {
+				case <-s.ctx.Done():
+					return
+				case <-time.After(acceptRetryDelay):
+				}
 			}
 		}
 
