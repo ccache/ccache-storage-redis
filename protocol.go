@@ -147,20 +147,6 @@ func writeMsg(w io.Writer, msg string) error {
 	return err
 }
 
-func readMsg(r io.Reader) (string, error) {
-	msgLen, err := readByte(r)
-	if err != nil {
-		return "", err
-	}
-
-	msg := make([]byte, msgLen)
-	if _, err := io.ReadFull(r, msg); err != nil {
-		return "", err
-	}
-
-	return string(msg), nil
-}
-
 func handleExists(r io.Reader, w io.Writer, s storage, logger *logger) error {
 	key, err := readKey(r)
 	if err != nil {
