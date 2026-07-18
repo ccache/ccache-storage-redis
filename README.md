@@ -124,6 +124,10 @@ export CRSH_LOGFILE=/path/to/debug.log
 Note: The helper process is spawned by ccache, so the environment variable must
 be set before ccache is invoked.
 
+Warning: The debug log is not redacted and may contain secrets such as bearer
+tokens and other credentials. Only enable it for troubleshooting and protect or
+delete the log file afterwards.
+
 ## Contributing
 
 Contributions are welcome! Please submit pull requests or open issues on GitHub.
