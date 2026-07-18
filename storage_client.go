@@ -12,6 +12,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -26,6 +27,32 @@ type storageClient struct {
 	basicAuthUser string
 	basicAuthPass string
 	logger        *logger
+}
+
+// requestBody lets callers wait until the HTTP transport has stopped reading
+// from the underlying reader.
+type requestBody struct {
+	io.Reader
+	done chan struct{}
+	once sync.Once
+}
+
+func newRequestBody(reader io.Reader) *requestBody {
+	return &requestBody{
+		Reader: reader,
+		done:   make(chan struct{}),
+	}
+}
+
+func (b *requestBody) Close() error {
+	b.once.Do(func() {
+		close(b.done)
+	})
+	return nil
+}
+
+func (b *requestBody) wait() {
+	<-b.done
 }
 
 func newStorageClient(cfg *config, logger *logger) (*storageClient, error) {
@@ -179,7 +206,8 @@ func (s *storageClient) put(key []byte, value io.Reader, size int64, overwrite b
 	}
 
 	s.logger.logf("PUT %s (%d bytes)", urlStr, size)
-	req, err := http.NewRequest("PUT", urlStr, value)
+	body := newRequestBody(value)
+	req, err := http.NewRequest("PUT", urlStr, body)
 	if err != nil {
 		return false, err
 	}
@@ -188,6 +216,7 @@ func (s *storageClient) put(key []byte, value io.Reader, size int64, overwrite b
 	req.Header.Set("Content-Type", "application/octet-stream")
 
 	resp, err := s.client.Do(req)
+	body.wait()
 	if err != nil {
 		return false, err
 	}

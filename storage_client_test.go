@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,20 @@ import (
 	"testing"
 	"time"
 )
+
+type delayedBodyCloseTransport struct {
+	started chan<- struct{}
+	release <-chan struct{}
+}
+
+func (t delayedBodyCloseTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	t.started <- struct{}{}
+	go func() {
+		<-t.release
+		req.Body.Close()
+	}()
+	return nil, errors.New("transport error")
+}
 
 func TestStorageClientAllowsConcurrentRequests(t *testing.T) {
 	started := make(chan struct{}, 2)
@@ -111,5 +126,49 @@ func TestStorageClientPutWithoutOverwritePropagatesHeadErrors(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "HTTP 500") {
 		t.Fatalf("put returned error %q, want HTTP 500", err)
+	}
+}
+
+func TestStorageClientPutWaitsForTransportToCloseBody(t *testing.T) {
+	started := make(chan struct{}, 1)
+	release := make(chan struct{})
+	client := &storageClient{
+		client: &http.Client{
+			Transport: delayedBodyCloseTransport{
+				started: started,
+				release: release,
+			},
+		},
+		baseURL: &url.URL{Scheme: "http", Host: "example.com"},
+		layout:  layoutFlat,
+		logger:  newLogger(""),
+	}
+
+	result := make(chan error, 1)
+	go func() {
+		_, err := client.put([]byte{0xf0, 0x0d}, bytes.NewReader([]byte("payload")), 7, true)
+		result <- err
+	}()
+
+	select {
+	case <-started:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for request to reach the transport")
+	}
+
+	select {
+	case err := <-result:
+		t.Fatalf("put returned before transport closed the body: %v", err)
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	close(release)
+	select {
+	case err := <-result:
+		if err == nil {
+			t.Fatal("put returned nil error, want transport error")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for put to return")
 	}
 }
