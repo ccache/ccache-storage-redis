@@ -121,6 +121,10 @@ func (s *ipcServer) handleConnection(conn net.Conn) {
 	}
 }
 
+// Note: The timer is only reset between requests, so it can fire while a
+// request slower than the idle timeout is still in flight. This is not a
+// problem in practice since ccache normally closes the connection on slow
+// requests much earlier than the idle timeout.
 func (s *ipcServer) resetIdleTimer() {
 	if s.config.IdleTimeout == 0 {
 		return
