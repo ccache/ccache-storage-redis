@@ -86,10 +86,17 @@ func (s *storageClient) keyToPath(key []byte) string {
 	case layoutBazel:
 		// Bazel format: ac/ + 64 hex digits, so pad shorter keys by repeating the key prefix to reach the expected SHA256 size.
 		const sha256HexSize = 64
-		if len(keyHex) >= sha256HexSize {
-			return fmt.Sprintf("ac/%s", keyHex[:sha256HexSize])
+		var bazelKey string
+		if keyHex != "" {
+			for len(bazelKey) < sha256HexSize {
+				remaining := sha256HexSize - len(bazelKey)
+				if remaining > len(keyHex) {
+					remaining = len(keyHex)
+				}
+				bazelKey += keyHex[:remaining]
+			}
 		}
-		return fmt.Sprintf("ac/%s%s", keyHex, keyHex[:sha256HexSize-len(keyHex)])
+		return "ac/" + bazelKey
 
 	default: // subdirs
 		if len(keyHex) < 2 {
