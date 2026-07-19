@@ -11,10 +11,10 @@ import (
 
 const version = "0.8"
 
-const helpText = `This is a ccache HTTP(S) storage helper, usually started automatically by ccache
+const helpText = `This is a ccache Redis(s) storage helper, usually started automatically by ccache
 when needed. More information here: https://ccache.dev/storage-helpers.html
 
-Project: https://github.com/ccache/ccache-storage-http-go
+Project: https://github.com/ccache/ccache-storage-redis-go
 Version: ` + version + `
 `
 

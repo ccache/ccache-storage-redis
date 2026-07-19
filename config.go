@@ -9,7 +9,6 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -26,9 +25,7 @@ type config struct {
 	URL         *url.URL
 	IdleTimeout time.Duration
 	Diagnostics []string
-	Layout      layout
 	BearerToken string
-	Headers     map[string]string
 	UseNetrc    bool
 	NetrcFile   string
 }
@@ -42,8 +39,6 @@ func parseConfig(logger *logger) (*config, error) {
 
 	cfg := &config{
 		IPCEndpoint: ipcEndpoint,
-		Layout:      layoutSubdirs,
-		Headers:     make(map[string]string),
 	}
 
 	urlStr := os.Getenv("CRSH_URL")
@@ -84,23 +79,6 @@ func parseConfig(logger *logger) (*config, error) {
 		switch key {
 		case "bearer-token":
 			cfg.BearerToken = value
-		case "header":
-			idx := strings.Index(value, "=")
-			if idx >= 0 {
-				headerKey := value[:idx]
-				headerValue := value[idx+1:]
-				cfg.Headers[headerKey] = headerValue
-			} else {
-				msg := fmt.Sprintf("error: invalid header (no \"=\"): %s", value)
-				cfg.Diagnostics = append(cfg.Diagnostics, msg)
-			}
-		case "layout":
-			switch layout(value) {
-			case layoutBazel, layoutFlat, layoutSubdirs:
-				cfg.Layout = layout(value)
-			default:
-				cfg.Diagnostics = append(cfg.Diagnostics, fmt.Sprintf("error: unknown layout: %s", value))
-			}
 		case "netrc-file":
 			cfg.NetrcFile = value
 			cfg.UseNetrc = true

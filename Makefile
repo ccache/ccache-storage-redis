@@ -1,5 +1,6 @@
-BINARY_NAME = ccache-storage-http
-BINARY_NAME_HTTPS = ccache-storage-https
+BINARY_NAME = ccache-storage-redis
+BINARY_NAME_UNIX = ccache-storage-redis+unix
+BINARY_NAME_HTTPS = ccache-storage-rediss
 INSTALL_DIR = /usr/local/bin
 GO = CGO_ENABLED=0 go
 LDFLAGS = -ldflags="-s -w"
@@ -53,11 +54,13 @@ $(BINARY_NAME)-windows-%.exe: $(SOURCES)
 .PHONY: install
 install: build
 	install -m 755 $(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME)
+	ln -sf $(INSTALL_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME_UNIX)
 	ln -sf $(INSTALL_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME_HTTPS)
 
 .PHONY: uninstall
 uninstall:
 	rm -f $(INSTALL_DIR)/$(BINARY_NAME)
+	rm -f $(INSTALL_DIR)/$(BINARY_NAME_UNIX)
 	rm -f $(INSTALL_DIR)/$(BINARY_NAME_HTTPS)
 
 .PHONY: clean
@@ -85,7 +88,7 @@ THIRD_PARTY_LICENSES.txt: go.mod go.sum
 	else \
 	  curl -fsSL https://raw.githubusercontent.com/golang/go/master/LICENSE >> $@; \
 	fi
-	find .licenses_tmp -type f \( -name 'LICENSE*' -o -name 'COPYING*' \) 2>/dev/null | grep -v '/ccache/ccache-storage-http-go/' | sort -u | while read -r licensefile; do \
+	find .licenses_tmp -type f \( -name 'LICENSE*' -o -name 'COPYING*' \) 2>/dev/null | grep -v '/ccache/ccache-storage-redis-go/' | sort -u | while read -r licensefile; do \
 	  relpath=$$(echo "$$licensefile" | sed 's|^.licenses_tmp/||'); \
 	  modpath=$$(dirname "$$relpath"); \
 	  echo "" >> $@; \

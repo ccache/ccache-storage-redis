@@ -401,8 +401,6 @@ func TestIntegrationInfoReturnsIdentityAndDiagnostics(t *testing.T) {
 	server := newStubServer(t, map[[2]string]responseSpec{})
 
 	h := newHelperProcessWithAttrs(t, server.url(), []helperAttr{
-		{key: "layout", value: "flat"},
-		{key: "header", value: "broken-header"},
 		{key: "mystery", value: "value"},
 	})
 
@@ -412,7 +410,6 @@ func TestIntegrationInfoReturnsIdentityAndDiagnostics(t *testing.T) {
 		t.Fatalf("identity: want %q, got %q", "ccache-storage-http-go "+version, info.identity)
 	}
 	wantDiagnostics := []string{
-		"error: invalid header (no \"=\"): broken-header",
 		"warning: unknown attribute: mystery",
 	}
 	if len(info.diagnostics) != len(wantDiagnostics) {
