@@ -88,7 +88,7 @@ THIRD_PARTY_LICENSES.txt: go.mod go.sum
 	else \
 	  curl -fsSL https://raw.githubusercontent.com/golang/go/master/LICENSE >> $@; \
 	fi
-	find .licenses_tmp -type f \( -name 'LICENSE*' -o -name 'COPYING*' \) 2>/dev/null | grep -v '/ccache/ccache-storage-redis-go/' | sort -u | while read -r licensefile; do \
+	find .licenses_tmp -type f \( -name 'LICENSE*' -o -name 'COPYING*' \) 2>/dev/null | grep -v '/ccache/ccache-storage-redis/' | sort -u | while read -r licensefile; do \
 	  relpath=$$(echo "$$licensefile" | sed 's|^.licenses_tmp/||'); \
 	  modpath=$$(dirname "$$relpath"); \
 	  echo "" >> $@; \

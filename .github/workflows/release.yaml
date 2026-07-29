@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Set up Go
-      uses: actions/setup-go@v6
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
 
@@ -37,7 +37,7 @@ jobs:
         # POSIX
         for arch in linux-{amd64,arm64,riscv64} darwin-{amd64,arm64}; do
           GOOS=${arch%-*} make licenses
-          ARCHIVE_NAME="ccache-storage-redis-go-${VERSION}-${arch}"
+          ARCHIVE_NAME="ccache-storage-redis-${VERSION}-${arch}"
           mkdir -p dist/tmp/"${ARCHIVE_NAME}"
           cp ccache-storage-redis-${arch} dist/tmp/"${ARCHIVE_NAME}"/ccache-storage-redis
           cp LICENSE README.md THIRD_PARTY_LICENSES.txt dist/tmp/"${ARCHIVE_NAME}"/
@@ -48,7 +48,7 @@ jobs:
         # Windows
         for arch in windows-{amd64,arm64}; do
           GOOS=windows make licenses
-          ARCHIVE_NAME="ccache-storage-redis-go-${VERSION}-${arch}"
+          ARCHIVE_NAME="ccache-storage-redis-${VERSION}-${arch}"
           mkdir -p dist/tmp/"${ARCHIVE_NAME}"
           cp ccache-storage-redis-${arch}.exe dist/tmp/"${ARCHIVE_NAME}"/ccache-storage-redis.exe
           cp LICENSE README.md THIRD_PARTY_LICENSES.txt dist/tmp/"${ARCHIVE_NAME}"/

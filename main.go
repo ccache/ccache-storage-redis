@@ -7,14 +7,16 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+
+	storagehelper "github.com/ccache/ccache-go-storage-helper"
 )
 
-const version = "0.8"
+const version = "0.1"
 
-const helpText = `This is a ccache Redis(s) storage helper, usually started automatically by ccache
+const helpText = `This is a ccache Redis storage helper, usually started automatically by ccache
 when needed. More information here: https://ccache.dev/storage-helpers.html
 
-Project: https://github.com/ccache/ccache-storage-redis-go
+Project: https://github.com/ccache/ccache-storage-redis
 Version: ` + version + `
 `
 
@@ -24,20 +26,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger := newLogger(os.Getenv("CRSH_LOGFILE"))
-	defer logger.close()
+	logger := storagehelper.NewLogger(os.Getenv("CRSH_LOGFILE"))
+	defer logger.Close()
 
-	logger.logf("Starting")
+	logger.Logf("Starting")
 
 	config, err := parseConfig(logger)
 	if err != nil {
-		logger.logf("Error: %v", err)
+		logger.Logf("Error: %v", err)
 		os.Exit(1)
 	}
 
-	server, err := newServer(config, logger)
+	storage, err := newStorageClient(config, logger)
 	if err != nil {
-		logger.logf("Failed to create server: %v", err)
+		logger.Logf("Failed to create storage: %v", err)
 		os.Exit(1)
 	}
 
@@ -46,11 +48,13 @@ func main() {
 		rootDir = `C:\`
 	}
 	if err := os.Chdir(rootDir); err != nil {
-		logger.logf("Warning: failed to chdir to root: %v", err)
+		logger.Logf("Warning: failed to chdir to root: %v", err)
 	}
 
-	if err := server.run(); err != nil {
-		logger.logf("Server error: %v", err)
+	identity := "ccache-storage-redis " + version
+	server := storagehelper.NewServer(config.Config, identity, storage, logger)
+	if err := server.Run(); err != nil {
+		logger.Logf("Server error: %v", err)
 		os.Exit(1)
 	}
 }
