@@ -306,6 +306,12 @@ func TestIntegrationObjectLifecycle(t *testing.T) {
 	if storedValue, err := server.Get("ccache:0123"); err != nil || storedValue != string(value) {
 		t.Fatalf("Redis value after no-op = %q, %v; want %q, nil", storedValue, err, value)
 	}
+	if status, message := h.put(key, []byte("replacement"), true); status != responseOK {
+		t.Fatalf("PUT with overwrite = (%d), want OK (message %q)", status, message)
+	}
+	if storedValue, err := server.Get("ccache:0123"); err != nil || storedValue != "replacement" {
+		t.Fatalf("Redis value after overwrite = %q, %v; want %q, nil", storedValue, err, value)
+	}
 
 	if status, message := h.remove(key); status != responseOK {
 		t.Fatalf("REMOVE status = (%d, %q), want (OK, nil)", status, message)
