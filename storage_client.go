@@ -119,22 +119,21 @@ func (s *storageClient) Get(key []byte) (io.ReadCloser, int64, bool, error) {
 func (s *storageClient) Put(key []byte, value io.Reader, size int64, overwrite bool) (bool, error) {
 	keyStr := buildKey(key)
 
-	if !overwrite {
-		exists, err := s.head(keyStr)
-		if err != nil {
-			return false, err
-		}
-		if exists {
-			return false, nil
-		}
-	}
-
 	v, err := io.ReadAll(value)
 	if err != nil {
 		return false, err
 	}
 
 	s.logger.Logf("SET %s (%d bytes)", keyStr, size)
+
+	if !overwrite {
+		val, err := s.client.SetNX(s.context, keyStr, v, 0).Result()
+		if err != nil {
+			return false, err
+		}
+		return val, nil
+	}
+
 	err = s.client.Set(s.context, keyStr, v, 0).Err()
 	if err != nil {
 		return false, err
