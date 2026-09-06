@@ -7,10 +7,13 @@ LDFLAGS = -ldflags="-s -w"
 BUILDFLAGS = -trimpath
 SOURCES = $(wildcard *.go)
 
-# Platform targets
-LINUX_TARGETS = $(BINARY_NAME)-linux-amd64 $(BINARY_NAME)-linux-arm64 $(BINARY_NAME)-linux-riscv64
-DARWIN_TARGETS = $(BINARY_NAME)-darwin-amd64 $(BINARY_NAME)-darwin-arm64
-WINDOWS_TARGETS = $(BINARY_NAME)-windows-amd64.exe $(BINARY_NAME)-windows-arm64.exe
+LINUX_ARCHS = amd64 arm64 riscv64 s390x
+DARWIN_ARCHS = amd64 arm64
+WINDOWS_ARCHS = amd64 arm64
+
+LINUX_TARGETS = $(foreach x,$(LINUX_ARCHS),$(BINARY_NAME)-linux-$(x))
+DARWIN_TARGETS = $(foreach x,$(DARWIN_ARCHS),$(BINARY_NAME)-darwin-$(x))
+WINDOWS_TARGETS = $(foreach x,$(WINDOWS_ARCHS),$(BINARY_NAME)-windows-$(x).exe)
 ALL_TARGETS = $(LINUX_TARGETS) $(DARWIN_TARGETS) $(WINDOWS_TARGETS)
 
 .PHONY: all
