@@ -6,13 +6,15 @@ package main
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 
 	"github.com/ccache/ccache-go-storage-helper"
 )
 
 type config struct {
 	*storagehelper.Config
-	URL *url.URL
+	URL                *url.URL
+	ConnectionPoolSize int
 }
 
 func parseConfig(logger *storagehelper.Logger) (*config, error) {
@@ -29,8 +31,23 @@ func parseConfig(logger *storagehelper.Logger) (*config, error) {
 	logger.Logf("URL: %s", cfg.URL)
 
 	for _, attribute := range cfg.Attributes {
-		warning := fmt.Sprintf("warning: unknown attribute: %s", attribute.Key)
-		cfg.Diagnostics = append(cfg.Diagnostics, warning)
+		key := attribute.Key
+		value := attribute.Value
+
+		switch key {
+		case "connection-pool-size":
+			size, err := strconv.Atoi(value)
+			if err != nil {
+				cfg.Diagnostics = append(cfg.Diagnostics, fmt.Sprintf("error: invalid connection pool size %q: %v", value, err))
+			} else if size <= 0 {
+				cfg.Diagnostics = append(cfg.Diagnostics, fmt.Sprintf("error: invalid connection pool size %q: must be positive", value))
+			} else {
+				cfg.ConnectionPoolSize = size
+			}
+		default:
+			warning := fmt.Sprintf("warning: unknown attribute: %s", attribute.Key)
+			cfg.Diagnostics = append(cfg.Diagnostics, warning)
+		}
 	}
 
 	for _, diag := range cfg.Diagnostics {

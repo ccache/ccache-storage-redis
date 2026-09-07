@@ -86,8 +86,6 @@ See also the [Redis storage wiki page] for tips on how to set up a storage serve
 
 [Redis storage wiki page]: https://github.com/ccache/ccache/wiki/Redis-storage
 
-### Configuration
-
 Example ccache configuration:
 
 ```
@@ -99,6 +97,15 @@ Or as an environment variable:
 ```bash
 export CCACHE_REMOTE_STORAGE="redis://cache.example.com"
 ```
+
+### Configuration attributes
+
+The helper supports the following custom attributes:
+
+- `@connection-pool-size`: Maximum number of connections. Defaults to
+  [go-redis]'s default.
+
+[go-redis]: https://github.com/redis/go-redis
 
 ## Optional debug logging
 

@@ -67,6 +67,10 @@ func newStorageClient(cfg *config, logger *storagehelper.Logger) (*storageClient
 	options.Dialer = redisDialer(options.TLSConfig)
 	options.ConnMaxIdleTime = 90 * time.Second
 
+	if cfg.ConnectionPoolSize > 0 {
+		options.PoolSize = cfg.ConnectionPoolSize
+	}
+
 	client := redis.NewClient(options)
 
 	sc := &storageClient{
