@@ -11,7 +11,7 @@ import (
 	storagehelper "github.com/ccache/ccache-go-storage-helper"
 )
 
-const version = "0.1"
+const version = "0.2"
 
 const helpText = `This is a ccache Redis storage helper, usually started automatically by ccache
 when needed. More information here: https://ccache.dev/storage-helpers.html
