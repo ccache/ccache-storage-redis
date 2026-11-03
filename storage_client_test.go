@@ -4,13 +4,13 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/url"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/ccache/ccache-go-storage-helper"
 )
 
@@ -188,12 +188,9 @@ func TestNewStorageClientDisablesRedisTimeouts(t *testing.T) {
 }
 
 func TestStorageClientAllowsConcurrentRequests(t *testing.T) {
-	server := miniredis.RunT(t)
+	server := newTestRedisServer(t)
 
-	url, err := url.Parse("redis://" + server.Addr())
-	if err != nil {
-		t.Fatalf("parse server URL: %v", err)
-	}
+	url := &url.URL{Scheme: "redis+unix", Path: server.Options().Addr}
 
 	client, err := newStorageClient(&config{URL: url}, storagehelper.NewLogger(""))
 	if err != nil {
@@ -201,10 +198,10 @@ func TestStorageClientAllowsConcurrentRequests(t *testing.T) {
 	}
 	defer client.client.Close()
 
-	if err = server.Set("ccache:01", "1"); err != nil {
+	if err = server.Set(context.Background(), "ccache:01", "1", 0).Err(); err != nil {
 		t.Fatalf("Set returned error: %v", err)
 	}
-	if err = server.Set("ccache:02", "2"); err != nil {
+	if err = server.Set(context.Background(), "ccache:02", "2", 0).Err(); err != nil {
 		t.Fatalf("Set returned error: %v", err)
 	}
 

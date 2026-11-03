@@ -126,3 +126,12 @@ file afterwards.
 ## Contributing
 
 Contributions are welcome! Please submit pull requests or open issues on GitHub.
+
+### Running tests
+
+Run `go test ./...` or `make test` to run the full test suite. Install
+`redis-server` or `valkey-server` in `PATH`, or set `REDIS_SERVER` to the server
+executable. Tests start and stop their own servers using Unix sockets with
+persistence disabled. Tests that require a server are skipped on Windows.
+
+Use `go test -short ./...` to skip tests that require a server.

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Replace miniredis with Redis or Valkey server processes in tests to simplify
+  packaging for Linux distributions.
+
 ## [0.2.1] - 2026-10-27
 
 [0.2.1]: https://github.com/ccache/ccache-storage-http-go/releases/tag/v0.2.1

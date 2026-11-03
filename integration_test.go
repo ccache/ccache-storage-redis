@@ -7,17 +7,18 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/ccache/ccache-go-storage-helper"
 )
 
@@ -262,8 +263,9 @@ func (h *helperProcess) readLog() string {
 }
 
 func TestIntegrationInfo(t *testing.T) {
-	server := miniredis.RunT(t)
-	h := newHelperProcess(t, "redis://"+server.Addr(), [][2]string{{"unknown", "value"}})
+	server := newTestRedisServer(t)
+	serverURL := (&url.URL{Scheme: "redis+unix", Path: server.Options().Addr}).String()
+	h := newHelperProcess(t, serverURL, [][2]string{{"unknown", "value"}})
 
 	identity, diagnostics := h.info()
 	if identity != "ccache-storage-redis "+version {
@@ -281,15 +283,16 @@ func TestIntegrationInfo(t *testing.T) {
 }
 
 func TestIntegrationObjectLifecycle(t *testing.T) {
-	server := miniredis.RunT(t)
-	h := newHelperProcess(t, "redis://"+server.Addr(), nil)
+	server := newTestRedisServer(t)
+	serverURL := (&url.URL{Scheme: "redis+unix", Path: server.Options().Addr}).String()
+	h := newHelperProcess(t, serverURL, nil)
 
 	key := []byte{0x01, 0x23}
 	value := []byte("first value")
 	if status, message := h.put(key, value, true); status != responseOK {
 		t.Fatalf("PUT status = %d, want OK (message %q)", status, message)
 	}
-	if storedValue, err := server.Get("ccache:0123"); err != nil || storedValue != string(value) {
+	if storedValue, err := server.Get(context.Background(), "ccache:0123").Result(); err != nil || storedValue != string(value) {
 		t.Fatalf("Redis value = %q, %v; want %q, nil", storedValue, err, value)
 	}
 
@@ -303,7 +306,7 @@ func TestIntegrationObjectLifecycle(t *testing.T) {
 	if status, message := h.put(key, []byte("replacement"), false); status != responseNoop {
 		t.Fatalf("PUT without overwrite = (%d, %q), want (NOOP, nil)", status, message)
 	}
-	if storedValue, err := server.Get("ccache:0123"); err != nil || storedValue != string(value) {
+	if storedValue, err := server.Get(context.Background(), "ccache:0123").Result(); err != nil || storedValue != string(value) {
 		t.Fatalf("Redis value after no-op = %q, %v; want %q, nil", storedValue, err, value)
 	}
 
